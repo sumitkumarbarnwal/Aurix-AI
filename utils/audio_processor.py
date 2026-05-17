@@ -21,6 +21,9 @@ def download_youtube_audio(url: str) -> str:
         "cookiefile": cookie_file,
         "nocheckcertificate": True,
 
+        # Enable curl-cffi backend to bypass standard requests library TLS/SSL drops on cloud servers
+        "impersonate": "chrome",
+
         "extractor_args": {
             "youtube": {
                 "player_client": ["android", "web"]
@@ -29,7 +32,10 @@ def download_youtube_audio(url: str) -> str:
 
         "retries": 10,
         "fragment_retries": 10,
+        # Force IPv4 to bypass cloud provider IPv6 blacklisting/throttling
         "source_address": "0.0.0.0",
+        # Avoid hanging indefinitely on blocked handshake connections
+        "socket_timeout": 30,
 
         "postprocessors": [
             {
