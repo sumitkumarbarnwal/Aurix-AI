@@ -26,6 +26,13 @@ def download_youtube_audio(url :str) ->str:
             }
         ],
         "quiet": True,
+        # Prefer Python's built-in urllib handler over the requests library (bypasses requests TLS handshake blocks)
+        "compat_options": ["prefer-legacy-http-handler"],
+        "http_headers": {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.5",
+        }
     }
     
     # Try to impersonate a browser TLS fingerprint to bypass cloud server blocking (UNEXPECTED_EOF_WHILE_READING)
