@@ -19,6 +19,12 @@ def download_youtube_audio(url :str) ->str:
         ],
         "quiet": True,
     }
+    
+    # Check if cookies.txt is provided to bypass YouTube bot detection (critical for cloud hosting)
+    cookie_path = "cookies.txt"
+    if os.path.exists(cookie_path):
+        ydl_opts["cookiefile"] = cookie_path
+        
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=True)
         filename = ydl.prepare_filename(info).replace(".webm", ".wav").replace(".m4a", ".wav")
