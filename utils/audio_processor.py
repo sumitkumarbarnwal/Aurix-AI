@@ -24,6 +24,8 @@ def download_youtube_audio(url :str) ->str:
     cookie_path = "cookies.txt"
     if os.path.exists(cookie_path):
         ydl_opts["cookiefile"] = cookie_path
+    elif os.path.exists("cookies.txt.txt"):
+        ydl_opts["cookiefile"] = "cookies.txt.txt"
         
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=True)
