@@ -17,7 +17,7 @@ def download_youtube_audio(url: str) -> str:
     print(f"Cookies status: {'FOUND' if os.path.exists(cookie_path) else 'NOT FOUND'} at {cookie_path}")
 
     ydl_opts = {
-        "format": "bestaudio/best",
+        "format": "bestaudio",
         "outtmpl": "downloads/%(id)s.%(ext)s",
         "quiet": False,
         "noplaylist": True,
@@ -26,27 +26,38 @@ def download_youtube_audio(url: str) -> str:
         "retries": 10,
         "fragment_retries": 10,
         "source_address": "0.0.0.0",
+        "socket_timeout": 30,
         "extractor_args": {
             "youtube": {
-                "player_client": ["android"]
+                "player_client": ["web"]
             }
-        }
+        },
+        "postprocessors": [
+            {
+                "key": "FFmpegExtractAudio",
+                "preferredcodec": "wav",
+                "preferredquality": "192",
+            }
+        ]
     }
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            print("Initiating clean yt-dlp extraction...")
+            print("Initiating clean yt-dlp extraction using 'web' player client...")
             info = ydl.extract_info(url, download=True)
-            filename = ydl.prepare_filename(info)
-            print(f"yt-dlp download completed successfully: {filename}")
+            raw_filename = ydl.prepare_filename(info)
+            # Since FFmpegExtractAudio post-processor runs, extension will be converted to .wav
+            filename = os.path.splitext(raw_filename)[0] + ".wav"
+            print(f"yt-dlp download and conversion completed successfully: {filename}")
             
-            # Keep Whisper-compatible audio output by ensuring conversion to WAV works
-            if not filename.lower().endswith(".wav"):
-                print(f"Downloaded file: {filename} is not WAV. Converting to WAV format...")
-                filename = convert_to_wav(filename)
-                print(f"Conversion complete: {filename}")
+            if os.path.exists(filename):
+                return filename
+            elif os.path.exists(raw_filename):
+                print(f"Raw file exists at {raw_filename} but WAV not found. Converting manually...")
+                return convert_to_wav(raw_filename)
+            else:
+                raise FileNotFoundError(f"Expected download file not found at: {filename}")
                 
-            return filename
     except Exception as e:
         print(f"Extraction failed with error: {e}. Trying fallback format...")
         # Fallback handling if bestaudio is unavailable
@@ -54,12 +65,16 @@ def download_youtube_audio(url: str) -> str:
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(url, download=True)
-                filename = ydl.prepare_filename(info)
+                raw_filename = ydl.prepare_filename(info)
+                filename = os.path.splitext(raw_filename)[0] + ".wav"
                 print(f"Fallback download completed: {filename}")
-                if not filename.lower().endswith(".wav"):
-                    filename = convert_to_wav(filename)
-                    print(f"Fallback conversion complete: {filename}")
-                return filename
+                
+                if os.path.exists(filename):
+                    return filename
+                elif os.path.exists(raw_filename):
+                    return convert_to_wav(raw_filename)
+                else:
+                    raise FileNotFoundError(f"Expected fallback file not found at: {filename}")
         except Exception as fallback_err:
             print(f"CRITICAL: All download and fallback attempts failed: {fallback_err}")
             raise RuntimeError(f"YouTube download failed: {fallback_err}")
