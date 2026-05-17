@@ -7,6 +7,14 @@ os.makedirs(DOWNLOAD_DIR,exist_ok = True)
 
 def download_youtube_audio(url :str) ->str:
     output_path = os.path.join(DOWNLOAD_DIR, "%(title)s.%(ext)s")
+    
+    # Securely generate cookies.txt from environment variable if provided (Hugging Face Secret)
+    # This prevents leaking sensitive YouTube session cookies in a public Git repository.
+    cookies_content = os.getenv("COOKIES_CONTENT")
+    if cookies_content:
+        with open("cookies.txt", "w") as f:
+            f.write(cookies_content)
+
     ydl_opts = {
         "format": "bestaudio/best",
         "outtmpl": output_path,
