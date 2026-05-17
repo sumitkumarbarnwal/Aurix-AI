@@ -28,6 +28,8 @@ def download_youtube_audio(url :str) ->str:
         "quiet": True,
         # Prefer Python's built-in urllib handler over the requests library (bypasses requests TLS handshake blocks)
         "compat_options": ["prefer-legacy-http-handler"],
+        # Allow yt-dlp to download the official EJS signature decryption scripts directly from GitHub at runtime
+        "remote_components": ["ejs:github"],
         "http_headers": {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
