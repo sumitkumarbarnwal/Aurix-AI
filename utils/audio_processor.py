@@ -26,10 +26,10 @@ def download_youtube_audio(url :str) ->str:
             }
         ],
         "quiet": True,
-        # Bypass client player restrictions by using iOS and Web clients
+        # Bypass client player restrictions by using android and web clients (both support cookies)
         "extractor_args": {
             "youtube": {
-                "player_client": ["ios", "web"]
+                "player_client": ["android", "web"]
             }
         }
     }
