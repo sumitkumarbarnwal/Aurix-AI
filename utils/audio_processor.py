@@ -28,6 +28,13 @@ def download_youtube_audio(url :str) ->str:
         "quiet": True,
     }
     
+    # Try to impersonate a browser TLS fingerprint to bypass cloud server blocking (UNEXPECTED_EOF_WHILE_READING)
+    try:
+        from yt_dlp.networking.impersonate import ImpersonateTarget
+        ydl_opts["impersonate"] = ImpersonateTarget.from_str("chrome")
+    except ImportError:
+        pass
+    
     # Check if cookies.txt is provided to bypass YouTube bot detection (critical for cloud hosting)
     cookie_path = "cookies.txt"
     if os.path.exists(cookie_path):
