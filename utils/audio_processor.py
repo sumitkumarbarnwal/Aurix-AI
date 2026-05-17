@@ -26,12 +26,6 @@ def download_youtube_audio(url :str) ->str:
             }
         ],
         "quiet": True,
-        # Bypass client player restrictions by using android and web clients (both support cookies)
-        "extractor_args": {
-            "youtube": {
-                "player_client": ["android", "web"]
-            }
-        }
     }
     
     # Try to impersonate a browser TLS fingerprint to bypass cloud server blocking (UNEXPECTED_EOF_WHILE_READING)
