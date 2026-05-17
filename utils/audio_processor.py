@@ -26,21 +26,32 @@ def download_youtube_audio(url :str) ->str:
             }
         ],
         "quiet": True,
+        # Bypass client player restrictions by using iOS and Web clients
+        "extractor_args": {
+            "youtube": {
+                "player_client": ["ios", "web"]
+            }
+        }
     }
     
     # Try to impersonate a browser TLS fingerprint to bypass cloud server blocking (UNEXPECTED_EOF_WHILE_READING)
     try:
         from yt_dlp.networking.impersonate import ImpersonateTarget
         ydl_opts["impersonate"] = ImpersonateTarget.from_str("chrome")
-    except ImportError:
-        pass
+        print("Successfully enabled TLS impersonation for YouTube downloads!")
+    except Exception as e:
+        print(f"WARNING: TLS impersonation failed to load (falling back to standard): {e}")
     
     # Check if cookies.txt is provided to bypass YouTube bot detection (critical for cloud hosting)
     cookie_path = "cookies.txt"
     if os.path.exists(cookie_path):
+        print(f"INFO: cookies.txt was successfully created and found in workspace! Size: {os.path.getsize(cookie_path)} bytes")
         ydl_opts["cookiefile"] = cookie_path
     elif os.path.exists("cookies.txt.txt"):
+        print(f"INFO: cookies.txt.txt was found in workspace! Size: {os.path.getsize('cookies.txt.txt')} bytes")
         ydl_opts["cookiefile"] = "cookies.txt.txt"
+    else:
+        print("WARNING: No cookies file found! YouTube downloads will likely fail.")
         
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=True)
