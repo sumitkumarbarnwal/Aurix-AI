@@ -58,13 +58,18 @@ def download_youtube_audio(url :str) ->str:
             info = ydl.extract_info(url, download=True)
             filename = ydl.prepare_filename(info).replace(".webm", ".wav").replace(".m4a", ".wav")
     except Exception as e:
-        # Self-healing fallback: If TLS impersonation fails due to missing server dependencies or invalid target, retry without it
-        if ("Impersonate target" in str(e) or "impersonate" in str(e).lower()) and "impersonate" in ydl_opts:
-            print("WARNING: Impersonation target is not supported on this server. Retrying download without TLS impersonation...")
+        # Bulletproof self-healing: If any error occurs while impersonation is enabled, retry without it
+        if "impersonate" in ydl_opts:
+            print(f"WARNING: Download failed with TLS impersonation enabled: {e}")
+            print("Retrying download cleanly without TLS impersonation...")
             ydl_opts.pop("impersonate", None)
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                info = ydl.extract_info(url, download=True)
-                filename = ydl.prepare_filename(info).replace(".webm", ".wav").replace(".m4a", ".wav")
+            try:
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                    info = ydl.extract_info(url, download=True)
+                    filename = ydl.prepare_filename(info).replace(".webm", ".wav").replace(".m4a", ".wav")
+            except Exception as retry_err:
+                print(f"ERROR: Download failed even without TLS impersonation: {retry_err}")
+                raise retry_err
         else:
             raise e
             
