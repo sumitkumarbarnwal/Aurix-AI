@@ -53,9 +53,21 @@ def download_youtube_audio(url :str) ->str:
     else:
         print("WARNING: No cookies file found! YouTube downloads will likely fail.")
         
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(url, download=True)
-        filename = ydl.prepare_filename(info).replace(".webm", ".wav").replace(".m4a", ".wav")
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=True)
+            filename = ydl.prepare_filename(info).replace(".webm", ".wav").replace(".m4a", ".wav")
+    except Exception as e:
+        # Self-healing fallback: If TLS impersonation fails due to missing server dependencies or invalid target, retry without it
+        if ("Impersonate target" in str(e) or "impersonate" in str(e).lower()) and "impersonate" in ydl_opts:
+            print("WARNING: Impersonation target is not supported on this server. Retrying download without TLS impersonation...")
+            ydl_opts.pop("impersonate", None)
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(url, download=True)
+                filename = ydl.prepare_filename(info).replace(".webm", ".wav").replace(".m4a", ".wav")
+        else:
+            raise e
+            
     return filename
 
 
