@@ -36,3 +36,9 @@ jobs:
     - name: Build Docker Image
       run: |
         docker build -t aurix-ai:latest .
+
+    - name: Push to Hugging Face
+      env:
+        HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      run: |
+        git push https://dataset-hub:$HF_TOKEN@huggingface.co/spaces/dataset-hub/Aurix-AI-Assistant main
