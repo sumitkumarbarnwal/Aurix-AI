@@ -1,0 +1,3 @@
+ffmpeg
+gcc
+ca-certificates

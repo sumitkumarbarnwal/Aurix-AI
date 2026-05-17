@@ -8,12 +8,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     FLASK_RUN_HOST=0.0.0.0 \
     FLASK_PORT=7860
 
-# Install system dependencies (ffmpeg is required for audio/video processing, nodejs solves the YouTube signature challenge)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     gcc \
     ca-certificates \
-    nodejs \
     && rm -rf /var/lib/apt/lists/*
 
 # Set up a new user named "user" with user ID 1000

@@ -18,19 +18,6 @@ from dotenv import load_dotenv
 # Load environment variables BEFORE any core/ imports
 load_dotenv()
 
-# Diagnostic: Verify if JavaScript runtime is active for yt-dlp signature decryption
-import subprocess
-try:
-    node_ver = subprocess.check_output(["node", "--version"]).decode().strip()
-    print(f"INFO: JavaScript runtime (node) is active! Version: {node_ver}")
-except Exception as e:
-    print(f"WARNING: No Node.js runtime found under 'node': {e}")
-    try:
-        node_ver = subprocess.check_output(["nodejs", "--version"]).decode().strip()
-        print(f"INFO: JavaScript runtime (nodejs) is active! Version: {node_ver}")
-    except Exception as e2:
-        print(f"CRITICAL: No JavaScript runtime found in system PATH! yt-dlp n-challenge decryption will fail: {e2}")
-
 from flask import Flask, send_from_directory
 from flask_cors import CORS
 
