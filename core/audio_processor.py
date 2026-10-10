@@ -72,11 +72,96 @@ def _get_ffmpeg_path() -> str | None:
     return shutil.which("ffmpeg")  # None if not found on system PATH
 
 
+def _prepare_cookie_file() -> str | None:
+    """
+    Prepares a valid Netscape cookie file for yt-dlp.
+    Preserves #HttpOnly_ prefixes which contain critical YouTube session tokens
+    (__Secure-3PSID, LOGIN_INFO, SID, HSID, SSID).
+    """
+    if os.path.exists("cookies.txt"):
+        return os.path.abspath("cookies.txt")
+
+    raw = os.getenv("YOUTUBE_COOKIES", "").strip()
+    if not raw:
+        return None
+
+    import tempfile
+
+    # Case 1: JSON format (e.g. from extensions like EditThisCookie)
+    if raw.startswith("[") and raw.endswith("]"):
+        try:
+            import json
+            cookies_json = json.loads(raw)
+            lines = ["# Netscape HTTP Cookie File\n"]
+            for c in cookies_json:
+                domain = c.get("domain", "")
+                flag = "TRUE" if domain.startswith(".") else "FALSE"
+                path = c.get("path", "/")
+                secure = "TRUE" if c.get("secure", False) else "FALSE"
+                expiry = int(c.get("expirationDate", c.get("expiry", 0)))
+                name = c.get("name", "")
+                value = c.get("value", "")
+                prefix = "#HttpOnly_" if c.get("httpOnly", False) else ""
+                lines.append(f"{prefix}{domain}\t{flag}\t{path}\t{secure}\t{expiry}\t{name}\t{value}\n")
+            tmp_cookie = os.path.join(tempfile.gettempdir(), "yt_cookies.txt")
+            with open(tmp_cookie, "w", encoding="utf-8") as f:
+                f.writelines(lines)
+            print(f"  [Cookie] Converted {len(cookies_json)} JSON cookies to Netscape format.")
+            return tmp_cookie
+        except Exception as e:
+            print(f"  [Cookie] Failed to parse JSON cookies: {e}")
+
+    # Case 2: Netscape format (standard cookies.txt)
+    # Handle literal escaped newlines or tabs from cloud env vars
+    if "\\n" in raw and "\n" not in raw:
+        raw = raw.replace("\\n", "\n")
+    if "\\t" in raw:
+        raw = raw.replace("\\t", "\t")
+
+    lines = raw.splitlines()
+    normalized = []
+    has_header = False
+
+    for line in lines:
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if "Netscape" in stripped:
+            has_header = True
+            normalized.append(stripped + "\n")
+            continue
+        # CRITICAL: Preserve #HttpOnly_ cookies! They contain the actual login session tokens.
+        if stripped.startswith("#") and not (stripped.startswith("#HttpOnly_") or stripped.startswith("#HttpOnly.")):
+            continue
+
+        if "\t" in stripped:
+            # Already valid tab-delimited line
+            normalized.append(stripped + "\n")
+        else:
+            # Fallback for space-delimited text from copy-pasting
+            parts = stripped.split()
+            if len(parts) >= 7:
+                domain, flag, path, secure, expiry, name = parts[:6]
+                value = " ".join(parts[6:])
+                normalized.append(f"{domain}\t{flag}\t{path}\t{secure}\t{expiry}\t{name}\t{value}\n")
+
+    if not has_header:
+        normalized.insert(0, "# Netscape HTTP Cookie File\n")
+
+    tmp_cookie = os.path.join(tempfile.gettempdir(), "yt_cookies.txt")
+    with open(tmp_cookie, "w", encoding="utf-8") as f:
+        f.writelines(normalized)
+
+    cookie_count = len([l for l in normalized if not l.startswith("#") or l.startswith("#HttpOnly_")])
+    print(f"  [Cookie] Loaded {cookie_count} valid cookies (including HttpOnly session tokens) from YOUTUBE_COOKIES.")
+    return tmp_cookie
+
+
 def download_youtube_audio(url: str) -> str:
     """
-    Download the best audio stream from a YouTube URL using yt-dlp (no postprocessor),
-    then convert it to 16kHz mono WAV using PyAV.
-    No ffmpeg/ffprobe binary required.
+    Download audio from a YouTube URL.
+    Attempts best available audio streams with fallback to unconstrained stream download.
+    Returns path to converted 16kHz WAV file.
     """
     output_template = os.path.join(DOWNLOAD_DIR, "%(id)s.%(ext)s")
 
@@ -87,35 +172,7 @@ def download_youtube_audio(url: str) -> str:
         except OSError:
             pass
 
-    cookie_file = None
-    if os.path.exists("cookies.txt"):
-        cookie_file = "cookies.txt"
-    elif os.getenv("YOUTUBE_COOKIES"):
-        import tempfile
-        raw = os.getenv("YOUTUBE_COOKIES", "")
-        # Normalize cookie string into strict Netscape tab-separated format
-        if "\\n" in raw and "\n" not in raw:
-            raw = raw.replace("\\n", "\n")
-        if "\\t" in raw:
-            raw = raw.replace("\\t", "\t")
-        lines = raw.splitlines()
-        normalized = ["# Netscape HTTP Cookie File\n"]
-        for line in lines:
-            line = line.strip()
-            if not line or line.startswith("#"):
-                continue
-            parts = line.split()
-            if len(parts) >= 7:
-                domain, flag, path, secure, expiry, name = parts[:6]
-                value = " ".join(parts[6:])
-                normalized.append(f"{domain}\t{flag}\t{path}\t{secure}\t{expiry}\t{name}\t{value}\n")
-            elif "\t" in line:
-                normalized.append(f"{line}\n")
-        tmp_cookie = os.path.join(tempfile.gettempdir(), "yt_cookies.txt")
-        with open(tmp_cookie, "w", encoding="utf-8") as f:
-            f.writelines(normalized)
-        cookie_file = tmp_cookie
-        print(f"  [Cookie] Loaded {len(normalized)} cookie entries from YOUTUBE_COOKIES.")
+    cookie_file = _prepare_cookie_file()
 
     ydl_opts = {
         "format": "ba/b/bestaudio/best",
@@ -124,6 +181,11 @@ def download_youtube_audio(url: str) -> str:
         "overwrites": True,
         "continuedl": False,
         "nopart": True,  # Avoids file locking on rename
+        "extractor_args": {
+            "youtube": {
+                "player_client": ["default", "mweb"]
+            }
+        }
     }
 
     if cookie_file:
