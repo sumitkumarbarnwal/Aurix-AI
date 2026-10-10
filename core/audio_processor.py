@@ -98,7 +98,7 @@ def download_youtube_audio(url: str) -> str:
         cookie_file = tmp_cookie
 
     ydl_opts = {
-        "format": "bestaudio/best",
+        "format": "bestaudio/best/ba*/b*",
         "outtmpl": output_template,
         "quiet": True,
         "overwrites": True,
@@ -106,7 +106,7 @@ def download_youtube_audio(url: str) -> str:
         "nopart": True,  # Avoids Windows file locking WinError 32 on rename
         "extractor_args": {
             "youtube": {
-                "player_client": ["tv_embedded", "mweb", "ios", "android"]
+                "player_client": ["web", "ios", "android"]
             }
         },
         # No postprocessors — PyAV handles format conversion
