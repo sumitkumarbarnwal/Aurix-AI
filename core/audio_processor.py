@@ -115,9 +115,18 @@ def download_youtube_audio(url: str) -> str:
     if cookie_file:
         ydl_opts["cookiefile"] = cookie_file
 
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(url, download=True)
-        downloaded_path = ydl.prepare_filename(info)
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=True)
+            downloaded_path = ydl.prepare_filename(info)
+    except Exception as e:
+        print(f"[Warning] Primary format selection failed ({e}), attempting fallback format...")
+        fallback_opts = dict(ydl_opts)
+        fallback_opts.pop("extractor_args", None)
+        fallback_opts["format"] = "b/ba/worst/best"
+        with yt_dlp.YoutubeDL(fallback_opts) as ydl:
+            info = ydl.extract_info(url, download=True)
+            downloaded_path = ydl.prepare_filename(info)
 
     # Resolve the actual file on disk (extension may differ from template)
     if not os.path.exists(downloaded_path):
