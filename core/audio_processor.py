@@ -92,50 +92,80 @@ def download_youtube_audio(url: str) -> str:
         cookie_file = "cookies.txt"
     elif os.getenv("YOUTUBE_COOKIES"):
         import tempfile
+        raw = os.getenv("YOUTUBE_COOKIES", "")
+        # Normalize cookie string into strict Netscape tab-separated format
+        if "\\n" in raw and "\n" not in raw:
+            raw = raw.replace("\\n", "\n")
+        if "\\t" in raw:
+            raw = raw.replace("\\t", "\t")
+        lines = raw.splitlines()
+        normalized = ["# Netscape HTTP Cookie File\n"]
+        for line in lines:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            parts = line.split()
+            if len(parts) >= 7:
+                domain, flag, path, secure, expiry, name = parts[:6]
+                value = " ".join(parts[6:])
+                normalized.append(f"{domain}\t{flag}\t{path}\t{secure}\t{expiry}\t{name}\t{value}\n")
+            elif "\t" in line:
+                normalized.append(f"{line}\n")
         tmp_cookie = os.path.join(tempfile.gettempdir(), "yt_cookies.txt")
         with open(tmp_cookie, "w", encoding="utf-8") as f:
-            f.write(os.getenv("YOUTUBE_COOKIES"))
+            f.writelines(normalized)
         cookie_file = tmp_cookie
+        print(f"  [Cookie] Loaded {len(normalized)} cookie entries from YOUTUBE_COOKIES.")
 
     ydl_opts = {
-        "format": "bestaudio/best/ba*/b*",
+        "format": "ba/b/bestaudio/best",
         "outtmpl": output_template,
         "quiet": True,
         "overwrites": True,
         "continuedl": False,
-        "nopart": True,  # Avoids Windows file locking WinError 32 on rename
-        "extractor_args": {
-            "youtube": {
-                "player_client": ["web", "ios", "android"]
-            }
-        },
-        # No postprocessors — PyAV handles format conversion
+        "nopart": True,  # Avoids file locking on rename
     }
 
     if cookie_file:
         ydl_opts["cookiefile"] = cookie_file
 
+    downloaded_path = None
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
             downloaded_path = ydl.prepare_filename(info)
     except Exception as e:
-        print(f"[Warning] Primary format selection failed ({e}), attempting fallback format...")
-        fallback_opts = dict(ydl_opts)
-        fallback_opts.pop("extractor_args", None)
-        fallback_opts["format"] = "b/ba/worst/best"
-        with yt_dlp.YoutubeDL(fallback_opts) as ydl:
+        print(f"[Warning] Primary format selection failed ({e}), attempting unconstrained stream fallback...")
+        raw_opts = {
+            "outtmpl": output_template,
+            "quiet": True,
+            "overwrites": True,
+            "continuedl": False,
+            "nopart": True,
+            # No 'format' specified: lets yt-dlp select whatever valid stream exists
+        }
+        if cookie_file:
+            raw_opts["cookiefile"] = cookie_file
+        with yt_dlp.YoutubeDL(raw_opts) as ydl:
             info = ydl.extract_info(url, download=True)
             downloaded_path = ydl.prepare_filename(info)
 
     # Resolve the actual file on disk (extension may differ from template)
-    if not os.path.exists(downloaded_path):
+    if downloaded_path and not os.path.exists(downloaded_path):
         base = os.path.splitext(downloaded_path)[0]
-        for ext in (".webm", ".m4a", ".mp4", ".opus", ".ogg", ".mp3", ".flac"):
-            candidate = base + ext
-            if os.path.exists(candidate):
-                downloaded_path = candidate
-                break
+        # Search for any non-temporary file matching the base filename
+        matches = [m for m in glob.glob(f"{base}*") if not m.endswith((".part", ".ytdl", ".aria2"))]
+        if matches:
+            downloaded_path = matches[0]
+        else:
+            for ext in (".webm", ".m4a", ".mp4", ".opus", ".ogg", ".mp3", ".flac"):
+                candidate = base + ext
+                if os.path.exists(candidate):
+                    downloaded_path = candidate
+                    break
+
+    if not downloaded_path or not os.path.exists(downloaded_path):
+        raise FileNotFoundError(f"Could not locate downloaded audio file for {url}")
 
     print(f"  [OK] Downloaded -> {os.path.basename(downloaded_path)}")
     print("  Converting to WAV via PyAV...")
