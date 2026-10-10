@@ -87,6 +87,16 @@ def download_youtube_audio(url: str) -> str:
         except OSError:
             pass
 
+    cookie_file = None
+    if os.path.exists("cookies.txt"):
+        cookie_file = "cookies.txt"
+    elif os.getenv("YOUTUBE_COOKIES"):
+        import tempfile
+        tmp_cookie = os.path.join(tempfile.gettempdir(), "yt_cookies.txt")
+        with open(tmp_cookie, "w", encoding="utf-8") as f:
+            f.write(os.getenv("YOUTUBE_COOKIES"))
+        cookie_file = tmp_cookie
+
     ydl_opts = {
         "format": "bestaudio/best",
         "outtmpl": output_template,
@@ -96,11 +106,14 @@ def download_youtube_audio(url: str) -> str:
         "nopart": True,  # Avoids Windows file locking WinError 32 on rename
         "extractor_args": {
             "youtube": {
-                "player_client": ["android", "ios"]
+                "player_client": ["tv_embedded", "mweb", "ios", "android"]
             }
         },
         # No postprocessors — PyAV handles format conversion
     }
+
+    if cookie_file:
+        ydl_opts["cookiefile"] = cookie_file
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=True)
