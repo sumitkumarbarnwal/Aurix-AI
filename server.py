@@ -46,7 +46,7 @@ CORS(app, supports_credentials=True, resources={
 })
 
 # Google OAuth Client ID
-GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "").strip()
 
 # ── In-memory state ──────────────────────────────────────────────────────────
 # Pipeline status per session
