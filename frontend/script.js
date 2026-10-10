@@ -144,6 +144,35 @@ function handleGoogleSignIn(response) {
   const btnCtaNav = document.getElementById('btn-cta-nav');
   const btnGetStarted = document.getElementById('btn-get-started');
 
+  const GOOGLE_CLIENT_ID = "848247315392-qnesisksolkt4nhdps4oahrtcqsmbiq1.apps.googleusercontent.com";
+
+  function initGoogleAuth() {
+    if (window.google && window.google.accounts && window.google.accounts.id) {
+      try {
+        window.google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: handleGoogleSignIn,
+        });
+        const btnContainer = document.querySelector('.g_id_signin');
+        if (btnContainer) {
+          window.google.accounts.id.renderButton(btnContainer, {
+            type: 'standard',
+            shape: 'pill',
+            theme: 'outline',
+            text: 'sign_in_with',
+            size: 'large',
+            width: 320,
+          });
+        }
+      } catch (e) {
+        console.warn('Google Auth init:', e);
+      }
+    }
+  }
+
+  // Initialize when Google SDK loads
+  window.addEventListener('load', initGoogleAuth);
+
   function openSigninModal() {
     // Check if user is already signed in
     const existingUser = localStorage.getItem('aurix-user');
@@ -151,6 +180,7 @@ function handleGoogleSignIn(response) {
       window.location.href = 'dashboard.html';
       return;
     }
+    initGoogleAuth();
     signinModal && signinModal.classList.add('visible');
   }
 
