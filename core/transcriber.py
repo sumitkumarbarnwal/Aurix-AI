@@ -3,7 +3,6 @@ import os
 import wave
 import requests
 from pydub import AudioSegment
-import librosa
 import numpy as np
 import torch
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -68,14 +67,8 @@ def transcribe_chunk_whisper(chunk_path: str) -> str:
         result = model.transcribe(audio_data, task="transcribe", language="en")
         return result["text"].strip()
     except Exception as e:
-        print(f"[Warning] Direct wave load transcription failed: {e}. Trying librosa fallback...")
-        try:
-            audio_data, _ = librosa.load(chunk_path, sr=16000, mono=True)
-            result = model.transcribe(audio_data, task="transcribe", language="en")
-            return result["text"].strip()
-        except Exception as e2:
-            print(f"[Warning] Librosa transcription failed: {e2}. Using placeholder.")
-            return f"[Transcription failed - audio format issue. File: {os.path.basename(chunk_path)}]"
+        print(f"[Warning] Direct wave load transcription failed: {e}. Using placeholder.")
+        return f"[Transcription failed - audio format issue. File: {os.path.basename(chunk_path)}]"
 
 
 def _send_to_sarvam(piece_path: str) -> str:
