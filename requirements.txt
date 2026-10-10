@@ -1,0 +1,51 @@
+# ── Aurix AI — requirements.txt ───────────────────────────────────────────────
+# Python >= 3.10 recommended
+
+# ── Flask API Server ──────────────────────────────────────────────────────────
+flask>=3.0.0
+flask-cors>=4.0.0
+gunicorn>=21.2.0
+
+# ── Google OAuth ──────────────────────────────────────────────────────────────
+google-auth>=2.29.0
+google-auth-oauthlib>=1.2.0
+
+# ── Audio / Video acquisition & processing ─────────────────────────────────────
+yt-dlp>=2024.4.9
+pydub>=0.25.1
+av>=12.0.0
+imageio-ffmpeg>=0.5.1
+ffmpeg-python>=0.2.0
+
+# ── Speech-to-Text (local Whisper) ────────────────────────────────────────────
+openai-whisper>=20231117
+torch>=2.2.0
+torchaudio>=2.2.0
+
+# ── Translation (Hindi → English) ─────────────────────────────────────────────
+deep-translator>=1.11.4
+
+# ── LLM Orchestration — LangChain + Mistral ──────────────────────────────────
+langchain>=0.2.0
+langchain-core>=0.2.0
+langchain-community>=0.2.0
+langchain-mistralai>=0.1.0
+mistralai>=0.4.0
+
+# ── RAG Pipeline ──────────────────────────────────────────────────────────────
+chromadb>=0.5.0
+langchain-chroma>=0.1.0
+sentence-transformers>=3.0.0
+langchain-huggingface>=0.0.3
+huggingface-hub>=0.23.0
+tiktoken>=0.7.0
+
+# ── Text Splitting ───────────────────────────────────────────────────────────
+langchain-text-splitters>=0.2.0
+
+# ── Environment ──────────────────────────────────────────────────────────────
+python-dotenv>=1.0.0
+
+# ── PDF & TXT Export ──────────────────────────────────────────────────────────
+reportlab>=4.2.0
+fpdf2>=2.7.9

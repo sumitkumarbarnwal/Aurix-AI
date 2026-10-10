@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: aurix-ai
+    runtime: python
+    region: oregon
+    plan: free
+    branch: main
+    buildCommand: pip install --no-cache-dir torch torchaudio --index-url https://download.pytorch.org/whl/cpu && pip install --no-cache-dir -r requirements.txt
+    startCommand: gunicorn -w 1 --threads 4 --timeout 300 -b 0.0.0.0:$PORT server:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: WHISPER_MODEL
+        value: tiny
+      - key: FLASK_SECRET_KEY
+        generateValue: true
+      - key: MISTRAL_API_KEY
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
