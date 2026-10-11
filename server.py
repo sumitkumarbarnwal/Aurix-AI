@@ -37,6 +37,8 @@ from core.rag_engine import build_rag_chain, ask_question
 # ── Flask App Setup ──────────────────────────────────────────────────────────
 app = Flask(__name__, static_folder="frontend", static_url_path="")
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "aurix-ai-secret-key-change-in-production")
+# Allow uploads up to 500 MB (MP4/MP3 files can be large)
+app.config["MAX_CONTENT_LENGTH"] = 500 * 1024 * 1024
 CORS(app, supports_credentials=True, resources={
     r"/api/*": {
         "origins": "*",
@@ -240,9 +242,15 @@ def process():
             if file.filename:
                 if not sid:
                     sid = str(uuid.uuid4())
-                filepath = os.path.join(UPLOAD_DIR, f"{sid}_{file.filename}")
+                # Sanitise filename to prevent path traversal
+                from werkzeug.utils import secure_filename
+                safe_name = secure_filename(file.filename)
+                if not safe_name:
+                    return jsonify({"error": "Invalid filename"}), 400
+                filepath = os.path.join(UPLOAD_DIR, f"{sid}_{safe_name}")
                 file.save(filepath)
                 source = filepath
+                print(f"[Upload] Saved: {safe_name} -> {filepath} ({os.path.getsize(filepath)} bytes)")
     
     if not sid:
         sid = str(uuid.uuid4())

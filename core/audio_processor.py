@@ -19,11 +19,24 @@ SAMPLE_RATE = 16000  # Whisper requires 16kHz
 
 def convert_to_wav_pyav(input_path: str) -> str:
     """
-    Convert any audio or video file to a 16kHz mono WAV using PyAV.
-    No external ffmpeg binary needed — PyAV bundles its own libraries.
+    Convert any audio or video file to a 16kHz mono WAV.
+    Primary: PyAV (bundled libav — no system ffmpeg needed for most formats).
+    Fallback: system ffmpeg binary (for H.264/AAC MP4 and other restricted codecs).
     """
     output_path = os.path.splitext(input_path)[0] + "_converted.wav"
 
+    try:
+        _convert_with_pyav(input_path, output_path)
+    except Exception as pyav_err:
+        print(f"  [Warning] PyAV failed ({pyav_err}), trying ffmpeg fallback...")
+        _convert_with_ffmpeg(input_path, output_path)
+
+    print(f"  [OK] Converted -> {os.path.basename(output_path)}")
+    return output_path
+
+
+def _convert_with_pyav(input_path: str, output_path: str) -> None:
+    """Convert using PyAV's bundled libav libraries."""
     with av.open(input_path) as container:
         audio_stream = next(
             (s for s in container.streams if s.type == "audio"), None
@@ -32,27 +45,53 @@ def convert_to_wav_pyav(input_path: str) -> str:
             raise ValueError(f"No audio stream found in: {input_path}")
 
         resampler = av.AudioResampler(
-            format="s16",   # 16-bit signed PCM
+            format="s16",  # 16-bit signed PCM
             layout="mono",
             rate=SAMPLE_RATE,
         )
 
         with wave.open(output_path, "wb") as wf:
             wf.setnchannels(1)
-            wf.setsampwidth(2)          # 16-bit = 2 bytes per sample
+            wf.setsampwidth(2)  # 16-bit = 2 bytes per sample
             wf.setframerate(SAMPLE_RATE)
 
             for packet in container.demux(audio_stream):
-                for frame in packet.decode():
-                    for resampled in resampler.resample(frame):
-                        wf.writeframes(resampled.to_ndarray().tobytes())
+                try:
+                    for frame in packet.decode():
+                        for resampled in resampler.resample(frame):
+                            wf.writeframes(resampled.to_ndarray().tobytes())
+                except av.error.InvalidDataError:
+                    # Skip corrupt/keyframe-only packets
+                    continue
 
             # Flush any remaining frames from the resampler
             for resampled in resampler.resample(None):
                 wf.writeframes(resampled.to_ndarray().tobytes())
 
-    print(f"  [OK] Converted -> {os.path.basename(output_path)}")
-    return output_path
+
+def _convert_with_ffmpeg(input_path: str, output_path: str) -> None:
+    """Convert using a system ffmpeg or imageio-ffmpeg binary."""
+    import subprocess
+    ffmpeg_bin = _get_ffmpeg_path()
+    if not ffmpeg_bin:
+        raise RuntimeError(
+            "No ffmpeg binary found on PATH or via imageio-ffmpeg. "
+            "Install ffmpeg (apt-get install ffmpeg) or pip install imageio-ffmpeg."
+        )
+
+    cmd = [
+        ffmpeg_bin,
+        "-y",           # Overwrite output
+        "-i", input_path,
+        "-vn",          # Drop video stream
+        "-acodec", "pcm_s16le",
+        "-ar", str(SAMPLE_RATE),
+        "-ac", "1",     # Mono
+        output_path,
+    ]
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        raise RuntimeError(f"ffmpeg conversion failed:\n{result.stderr[-1000:]}")  # Last 1000 chars
 
 
 def _get_ffmpeg_path() -> str | None:
