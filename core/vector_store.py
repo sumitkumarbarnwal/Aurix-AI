@@ -1,57 +1,99 @@
+"""
+vector_store.py — Vector database management using ChromaDB and HuggingFace embeddings.
+"""
+
 import os
+import re
 from langchain_chroma import Chroma
-from langchain_community.embeddings import HuggingFaceEmbeddings
+try:
+    from langchain_huggingface import HuggingFaceEmbeddings
+except ImportError:
+    from langchain_community.embeddings import HuggingFaceEmbeddings
+
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
 
 CHROMA_DIR = "vector_db"
-COLLECTION_NAME = "meeting_transcript"
+DEFAULT_COLLECTION = "aurix_documents"
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
+
+# Global cached embeddings instance
+_embeddings = None
 
 
 def get_embeddings():
-    return HuggingFaceEmbeddings(
-        model_name=EMBEDDING_MODEL,
-        model_kwargs={"device": "cpu"}
-    )
+    global _embeddings
+    if _embeddings is None:
+        print("[VectorStore] Initializing embeddings model:", EMBEDDING_MODEL)
+        _embeddings = HuggingFaceEmbeddings(
+            model_name=EMBEDDING_MODEL,
+            model_kwargs={"device": "cpu"}
+        )
+    return _embeddings
 
 
-def build_vector_store(transcript: str) -> Chroma:
-    print("Building vector store...")
+def sanitize_collection_name(name: str) -> str:
+    """Ensure collection name meets Chroma requirements: 3-63 chars, alphanumeric, _ or -."""
+    clean = re.sub(r"[^a-zA-Z0-9_-]", "_", name)
+    clean = clean.strip("_-")
+    if len(clean) < 3:
+        clean = "col_" + clean
+    return clean[:63]
+
+
+def build_vector_store(text: str, session_id: str = None) -> Chroma:
+    """
+    Builds a vector store from document text.
+    Uses session-specific collection names to isolate documents across sessions.
+    """
+    if not text or not text.strip():
+        raise ValueError("Cannot build vector store from empty document.")
+
+    col_name = sanitize_collection_name(f"doc_{session_id}" if session_id else DEFAULT_COLLECTION)
+    print(f"[VectorStore] Indexing document into collection '{col_name}'...")
 
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=500,
-        chunk_overlap=50
+        chunk_size=1000,
+        chunk_overlap=150,
+        separators=["\n\n--- Page", "\n\n", "\n", ". ", " "]
     )
-    chunks = splitter.split_text(transcript)
+    chunks = splitter.split_text(text)
 
     docs = [
-        Document(page_content=chunk, metadata={"chunk_index": i})
+        Document(
+            page_content=chunk,
+            metadata={"chunk_index": i, "session_id": session_id or "default"}
+        )
         for i, chunk in enumerate(chunks)
     ]
 
     embeddings = get_embeddings()
+
+    # Create Chroma vector store without separate client to avoid Windows SQLite locking
     vector_store = Chroma.from_documents(
         documents=docs,
         embedding=embeddings,
-        collection_name=COLLECTION_NAME,
+        collection_name=col_name,
         persist_directory=CHROMA_DIR
     )
 
+    print(f"[VectorStore] Successfully indexed {len(docs)} chunks.")
     return vector_store
 
 
-def load_vector_store() -> Chroma:
+def load_vector_store(session_id: str = None) -> Chroma:
+    """Load existing vector store collection."""
+    col_name = sanitize_collection_name(f"doc_{session_id}" if session_id else DEFAULT_COLLECTION)
     embeddings = get_embeddings()
-    vector_store = Chroma(
-        collection_name=COLLECTION_NAME,
+    return Chroma(
+        collection_name=col_name,
         embedding_function=embeddings,
         persist_directory=CHROMA_DIR
     )
-    return vector_store
 
 
-def get_retriever(vector_store: Chroma, k: int = 4):
+def get_retriever(vector_store: Chroma, k: int = 6):
+    """Returns a similarity retriever configured to return top k chunks."""
     return vector_store.as_retriever(
         search_type="similarity",
         search_kwargs={"k": k}

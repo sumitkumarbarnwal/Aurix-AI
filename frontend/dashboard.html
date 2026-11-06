@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Aurix AI — Process Your Knowledge</title>
-  <meta name="description" content="Upload videos, audio, and documents to get AI-powered summaries, fact-checking, and semantic analysis." />
+  <title>Aurix AI — Multi-Format AI Intelligence & Q&A</title>
+  <meta name="description" content="Upload PDF, Audio, Video, and Text documents to get AI-powered executive summaries, action items, key decisions, and interactive Q&A." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -31,11 +31,10 @@
       </a>
 
       <nav class="dash-nav-links" id="dash-nav-links">
-        <a href="#" class="dash-nav-link active" id="nav-upload-hub">Upload Hub</a>
-        <a href="#" class="dash-nav-link" id="nav-my-projects">My Projects</a>
+        <a href="#" class="dash-nav-link active" id="nav-upload-hub">Knowledge Hub</a>
+        <a href="#" class="dash-nav-link" id="nav-my-projects">Files</a>
         <a href="#" class="dash-nav-link" id="nav-knowledge-base">Knowledge Base</a>
-        <a href="#" class="dash-nav-link" id="nav-aurix-engine">Aurix Engine</a>
-        <a href="#" class="dash-nav-link" id="nav-api-docs">API Docs</a>
+        <a href="#" class="dash-nav-link" id="nav-aurix-engine">Aurix RAG Engine</a>
       </nav>
 
       <div class="dash-nav-actions">
@@ -47,10 +46,6 @@
           <svg class="icon-moon" width="18" height="18" viewBox="0 0 18 18" fill="none">
             <path d="M15.5 9.5C14.8 13 11.6 15.5 8 15C4.4 14.5 2 11.3 2.5 7.7C3 4.7 5.3 2.5 8 2C6.2 4 6.2 7.2 8.5 9.5C10.2 11.2 12.8 11.5 15.5 9.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-        </button>
-        <button class="dash-icon-btn" id="dash-notif" title="Notifications">
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2C6.5 2 4.5 4 4.5 6.5V10L3 12V13H15V12L13.5 10V6.5C13.5 4 11.5 2 9 2Z" stroke="currentColor" stroke-width="1.3"/><path d="M7 14C7 15.1 7.9 16 9 16C10.1 16 11 15.1 11 14" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
-          <span class="notif-dot"></span>
         </button>
         <div class="dash-avatar" id="dash-avatar" title="Profile">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="3.5" stroke="currentColor" stroke-width="1.3"/><path d="M3 17C3 14 6 12 10 12C14 12 17 14 17 17" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
@@ -64,14 +59,14 @@
   <main class="dash-main">
     <!-- Page Header -->
     <div class="dash-header" id="dash-header">
-      <h1 class="dash-title" id="dash-title">Aurix AI – Process Your Knowledge</h1>
+      <h1 class="dash-title" id="dash-title">Multi-Format AI Intelligence &amp; Q&amp;A</h1>
       <div class="aurix-score" id="aurix-score">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1L10 5H15L11 8L12.5 13L8 10L3.5 13L5 8L1 5H6L8 1Z" fill="#00D4FF"/></svg>
-        <span>Aurix Score</span>
+        <span>Aurix Engine</span>
         <span class="score-dots">
           <span class="sdot green"></span>
           <span class="sdot green"></span>
-          <span class="sdot dim"></span>
+          <span class="sdot dim" id="status-rag-dot"></span>
         </span>
       </div>
     </div>
@@ -82,90 +77,75 @@
       <!-- ===== LEFT: Upload Panel ===== -->
       <div class="upload-panel" id="upload-panel">
         <div class="panel-title-row">
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 12V3M9 3L5 7M9 3L13 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 12V14C2 15.1 2.9 16 4 16H14C15.1 16 16 15.1 16 14V12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-          <h2>Upload</h2>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <h2>Upload Content</h2>
         </div>
-        <p class="upload-desc">Provide a Video URL (e.g., YouTube, MP4, MP3, WAV file, or paste a document link or text below.</p>
+        <p class="upload-desc">Upload any <strong>PDF document, Audio recording, Video file, or Text file</strong>. Aurix AI extracts &amp; transcribes the content, creates executive summaries, and enables interactive Q&amp;A.</p>
 
-        <!-- Language Selector -->
-        <div class="lang-selector">
-          <label for="lang-select">Language:</label>
+        <!-- Supported Formats Badges -->
+        <div class="format-pills">
+          <span class="format-pill active" title="PDF Documents"><span class="pill-icon">📄</span> PDF (.pdf)</span>
+          <span class="format-pill active" title="Audio Recordings"><span class="pill-icon">🎙️</span> Audio (.mp3, .wav, .m4a)</span>
+          <span class="format-pill active" title="Video Recordings"><span class="pill-icon">🎬</span> Video (.mp4, .mov, .webm)</span>
+          <span class="format-pill active" title="Text Documents"><span class="pill-icon">📝</span> Text (.txt, .docx, .md)</span>
+        </div>
+
+        <!-- Language Selector (For Audio / Video Transcription) -->
+        <div class="lang-selector-row">
+          <label for="lang-select">Audio/Video Speech Language:</label>
           <select id="lang-select" class="lang-select">
             <option value="english">English</option>
             <option value="hinglish">Hinglish (Hindi → English)</option>
           </select>
         </div>
 
-        <!-- URL Input -->
-        <div class="url-input-wrap" id="url-input-wrap">
-          <div class="url-input-row">
-            <span class="url-icon">🔗</span>
-            <input type="text" class="url-input" id="url-input" placeholder="https://www.youtube.com/watch?v=sample_ai_lecture" spellcheck="false" />
-            <button class="url-check" id="url-check-btn" title="Validate URL">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8L7 12L13 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </button>
-          </div>
-          <!-- URL History -->
-          <div class="url-history" id="url-history">
-            <div class="url-history-item">
-              <span class="hist-icon">🔗</span>
-              <span>https://www.youtube.com/watch?v=sample_ai_lecture</span>
-            </div>
-            <div class="url-history-item">
-              <span class="hist-icon">🔗</span>
-              <span>https://www.youtube.com/watch?v=sample_ai</span>
-            </div>
-            <div class="url-history-item">
-              <span class="hist-icon">🔗</span>
-              <span>https://www.youtube.com/watch?v=sample_ai</span>
-            </div>
-          </div>
-        </div>
-
         <!-- Drag & Drop Area -->
-        <p class="drop-label">Drag and drop (e.g., local files).</p>
         <div class="drop-zone" id="drop-zone">
-          <div class="file-types">
-            <div class="file-type-card mp4">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><polygon points="6,4 16,10 6,16" fill="currentColor"/></svg>
-              <span>.mp4</span>
-            </div>
-            <div class="file-type-card mp3">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 4V14M6 12C6 13.1 7.8 14 10 14C12.2 14 14 13.1 14 12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><circle cx="6" cy="13" r="2" fill="currentColor"/><circle cx="14" cy="13" r="2" fill="currentColor"/></svg>
-              <span>.mp3</span>
-            </div>
-            <div class="file-type-card pdf">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="4" y="2" width="12" height="16" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M7 7H13M7 10H13M7 13H10" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
-              <span>.pdf</span>
-            </div>
-            <div class="file-type-card txt">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="4" y="2" width="12" height="16" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M7 6H13M7 9H11" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
-              <span>.txt</span>
-            </div>
+          <div class="drop-zone-icon">
+            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#00D4FF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="12" y1="12" x2="12" y2="18"></line>
+              <polyline points="9 15 12 12 15 15"></polyline>
+            </svg>
           </div>
-          <button class="browse-btn" id="browse-btn">
+          <div class="drop-zone-text">
+            <p class="drop-main-text">Drag &amp; drop your <strong>PDF, Audio, Video, or Text</strong> file here</p>
+            <p class="drop-sub-text">Supported: .pdf, .mp3, .wav, .m4a, .mp4, .mov, .webm, .txt, .docx, .md</p>
+          </div>
+          <button class="browse-btn" id="browse-btn" type="button">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 7H6M6 7V1M6 7L2 11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><rect x="6" y="3" width="7" height="10" rx="1.5" stroke="currentColor" stroke-width="1.2"/></svg>
-            browse files
+            Browse Files
           </button>
-          <input type="file" id="file-input" class="file-input-hidden" accept=".mp4,.mp3,.wav,.pdf,.txt,.doc,.docx" multiple />
+          <input type="file" id="file-input" class="file-input-hidden" accept=".pdf,.docx,.txt,.md,.csv,.rtf,.mp3,.wav,.m4a,.aac,.flac,.ogg,.mp4,.mov,.mkv,.avi,.webm" />
         </div>
 
-        <!-- Processing Pipeline -->
+        <!-- Selected File Status Badge -->
+        <div class="selected-file-card" id="selected-file-card" style="display:none;">
+          <div class="selected-file-icon" id="selected-file-icon">📄</div>
+          <div class="selected-file-details">
+            <span class="selected-file-name" id="selected-file-name">document.pdf</span>
+            <span class="selected-file-size" id="selected-file-size">0 KB</span>
+          </div>
+          <span class="selected-file-badge" id="selected-file-badge">Processing...</span>
+        </div>
+
+        <!-- Processing Pipeline Indicator -->
         <div class="pipeline" id="pipeline">
           <div class="pipeline-track">
             <div class="pipeline-progress" id="pipeline-progress"></div>
           </div>
           <div class="pipeline-dots">
-            <div class="pip-dot active" id="pip-1"></div>
-            <div class="pip-dot active" id="pip-2"></div>
+            <div class="pip-dot" id="pip-1"></div>
+            <div class="pip-dot" id="pip-2"></div>
             <div class="pip-dot" id="pip-3"></div>
             <div class="pip-dot" id="pip-4"></div>
           </div>
           <div class="pipeline-labels">
-            <span class="pip-label">Rec. Input</span>
-            <span class="pip-label">Text Processing</span>
-            <span class="pip-label">Semantic Analysis</span>
-            <span class="pip-label">Aurix Report<br/>Generation</span>
+            <span class="pip-label">Upload</span>
+            <span class="pip-label">Extract / Transcribe</span>
+            <span class="pip-label">AI Summary</span>
+            <span class="pip-label">Q&amp;A Ready</span>
           </div>
         </div>
       </div>
@@ -175,94 +155,65 @@
         <!-- Tabs -->
         <div class="analysis-tabs" id="analysis-tabs">
           <button class="atab active" id="tab-smart-summary" data-tab="smart-summary">Smart Summary</button>
-          <button class="atab" id="tab-fact-check" data-tab="fact-check">Fact Checked Research</button>
-          <button class="atab" id="tab-synthesis" data-tab="synthesis">Synthesis Overview</button>
-          <button class="atab" id="tab-verification" data-tab="verification">Verification Report</button>
+          <button class="atab" id="tab-fact-check" data-tab="fact-check">Action Items</button>
+          <button class="atab" id="tab-synthesis" data-tab="synthesis">Key Findings</button>
+          <button class="atab" id="tab-verification" data-tab="verification">Open Questions</button>
         </div>
 
         <!-- Tab Content -->
         <div class="analysis-content" id="analysis-content">
           <!-- Smart Summary Tab -->
           <div class="tab-pane active" id="pane-smart-summary" data-pane="smart-summary">
-            <div class="result-section">
-              <h3 class="result-title">Smart Summary</h3>
-              <ul class="result-list" id="smart-summary-list">
-                <li>Summary video URL: experts includes treatment knowledge and competitor analysis across diverse methods consider events and invoicing.</li>
-                <li>Vcentric: research from ensembled corpus the document to use docs and categories that considers used vectors, priority, mediating, instances, modules disparities or insert reasons summarily.</li>
-              </ul>
+            <div class="placeholder-msg" id="summary-placeholder">
+              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              <p>Upload a PDF, Audio recording, Video, or Text file to generate an AI-powered summary and analysis.</p>
             </div>
-
-            <div class="result-section">
-              <h3 class="result-title">Key Takeaways</h3>
-              <ul class="result-list">
-                <li>Summary time recorders important communications categories and developments of taxonomists, products counseling and alterations.</li>
-              </ul>
-            </div>
-
-            <div class="result-section">
-              <h3 class="result-title">Synthesis Overview</h3>
-              <ul class="result-list">
-                <li>Vcentric: incrementable to method document to find vast analytics that instance vast coincide in notch regardless summary aries and full meeting, an entire notes based on raw meeting.</li>
-              </ul>
-            </div>
-
-            <div class="result-section">
-              <h3 class="result-title">Key Takeaways</h3>
-              <ul class="result-list">
-                <li>Summary consolidate dissemination to recurrent design and objects and propose circumstantialities.</li>
-                <li>Semantic document economical advancement and coupler document analytical on measuring and undertaken, carrier presence of latest analytics.</li>
-              </ul>
-            </div>
+            <div class="summary-body" id="summary-body" style="display:none;"></div>
           </div>
 
-          <!-- Fact Check Tab -->
+          <!-- Action Items Tab -->
           <div class="tab-pane" id="pane-fact-check" data-pane="fact-check">
-            <div class="result-section">
-              <h3 class="result-title">Fact Checked Research</h3>
-              <div class="placeholder-msg">
-                <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="18" stroke="currentColor" stroke-width="1.5" opacity="0.3"/><path d="M14 20L18 24L26 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.4"/></svg>
-                <p>Upload a video or document to generate fact-checked research analysis.</p>
-              </div>
+            <div class="placeholder-msg">
+              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              <p>Upload a file to extract actionable tasks, recommendations, and next steps.</p>
             </div>
           </div>
 
-          <!-- Synthesis Tab -->
+          <!-- Key Findings Tab -->
           <div class="tab-pane" id="pane-synthesis" data-pane="synthesis">
-            <div class="result-section">
-              <h3 class="result-title">Synthesis Overview</h3>
-              <div class="placeholder-msg">
-                <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="18" stroke="currentColor" stroke-width="1.5" opacity="0.3"/><path d="M12 20H28M20 12V28" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.4"/></svg>
-                <p>Upload content to see cross-referenced synthesis of key themes and insights.</p>
-              </div>
+            <div class="placeholder-msg">
+              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              <p>Upload a file to extract key decisions, established facts, and conclusions.</p>
             </div>
           </div>
 
-          <!-- Verification Tab -->
+          <!-- Open Questions Tab -->
           <div class="tab-pane" id="pane-verification" data-pane="verification">
-            <div class="result-section">
-              <h3 class="result-title">Verification Report</h3>
-              <div class="placeholder-msg">
-                <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><path d="M20 4L34 11V20C34 28 27 35 20 37C13 35 6 28 6 20V11L20 4Z" stroke="currentColor" stroke-width="1.5" opacity="0.3"/><path d="M14 20L18 24L26 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.4"/></svg>
-                <p>Upload content to generate a comprehensive verification report.</p>
-              </div>
+            <div class="placeholder-msg">
+              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <p>Upload a file to identify unresolved questions and future exploration areas.</p>
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- RAG Chat Section -->
-        <div class="chat-section" id="chat-section">
-          <h3 class="chat-title">💬 Chat with your content</h3>
-          <div class="chat-messages" id="chat-messages">
-            <div class="chat-placeholder">
-              <p>Process a video or document, then ask questions about it here.</p>
-            </div>
+      <!-- ===== FULL WIDTH: RAG Document / Media Q&A Section ===== -->
+      <div class="chat-section" id="chat-section">
+        <div class="chat-header">
+          <h3 class="chat-title">💬 Chat with Your Uploaded Content</h3>
+          <span class="chat-status-badge" id="chat-status-badge">Awaiting upload</span>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+          <div class="chat-placeholder" id="chat-placeholder">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00D4FF" stroke-width="1.5" opacity="0.4" style="margin-bottom:8px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <p>Upload a PDF, Audio, Video, or Text file above. Once analyzed, ask any question about the content to get accurate answers.</p>
           </div>
-          <div class="chat-input-row">
-            <input type="text" class="chat-input" id="chat-input" placeholder="Ask anything about your content..." />
-            <button class="chat-send" id="chat-send" title="Send">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M14 2L7 9M14 2L10 14L7 9M14 2L2 6L7 9" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </button>
-          </div>
+        </div>
+        <div class="chat-input-row">
+          <input type="text" class="chat-input" id="chat-input" placeholder="Ask anything about the uploaded content..." disabled />
+          <button class="chat-send" id="chat-send" title="Send question" disabled>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
         </div>
       </div>
 
