@@ -296,7 +296,9 @@ def stream_status(sid):
     """Server-Sent Events stream for real-time pipeline progress."""
     def generate():
         last_step = ""
-        while True:
+        start_time = time.time()
+        max_duration = 300  # 5 min timeout to prevent thread starvation
+        while time.time() - start_time < max_duration:
             status = pipeline_status.get(sid, {})
             current_step = status.get("step", "")
 

@@ -1,30 +1,10 @@
-import whisper
 import os
 import wave
 import requests
 from pydub import AudioSegment
 import numpy as np
-import torch
 from concurrent.futures import ThreadPoolExecutor, as_completed
-
 import shutil
-
-# Add FFmpeg path to environment for Whisper
-ffmpeg_exe = shutil.which("ffmpeg")
-if ffmpeg_exe:
-    ffmpeg_dir = os.path.dirname(ffmpeg_exe)
-    if ffmpeg_dir not in os.environ.get("PATH", ""):
-        os.environ["PATH"] = ffmpeg_dir + os.pathsep + os.environ.get("PATH", "")
-else:
-    # Fallback to the new FFmpeg installation path
-    fallback_dir = r"C:\ffmpeg-2026-05-11-git-17bc88e67f-full_build\ffmpeg-2026-05-11-git-17bc88e67f-full_build\bin"
-    if os.path.exists(fallback_dir):
-        os.environ["PATH"] = fallback_dir + os.pathsep + os.environ.get("PATH", "")
-
-# Sarvam's sync STT-translate API rejects audio longer than 30s.
-# We slice each chunk into 25s pieces (with a 5s safety margin) before sending.
-SARVAM_PIECE_SECONDS = 25
-
 import threading
 
 WHISPER_MODEL = os.getenv("WHISPER_MODEL", "tiny")
@@ -41,6 +21,8 @@ def load_model():
     global _model
     with _model_lock:
         if _model is None:
+            import torch
+            import whisper
             model_size = os.getenv("WHISPER_MODEL", "tiny")
             device = "cuda" if torch.cuda.is_available() else "cpu"
             print(f"Loading Whisper model: {model_size} on {device.upper()} ...")
