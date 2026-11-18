@@ -30,8 +30,7 @@ load_dotenv()
 
 # ── Import core pipeline modules ─────────────────────────────────────────────
 from core.pdf_processor import extract_text_from_file
-from core.summarizer import summarize, generate_title
-from core.extractor import extract_all_insights
+from core.analyzer import analyze_content
 from core.rag_engine import build_rag_chain, ask_question
 from core.audio_processor import process_input
 from core.transcriber import transcribe_all
@@ -200,28 +199,17 @@ def run_pipeline_async(sid, source, language="english"):
                 "Please upload a PDF, document (.txt, .docx), audio (.mp3, .wav), or video (.mp4, .mov) file."
             )
 
-        # ── 3. Title Generation ────────────────────────────────────────────────
-        update_status(sid, "title", 50, "Analyzing content and generating title...")
-        title = generate_title(content_text)
-        update_status(sid, "title_done", 58, f"Title: {title}")
-        time.sleep(1.0)  # Rate pacing for Mistral free tier
+        # ── 3. Unified AI Analysis (Title, Summary, Action Items, Decisions, Questions) ──
+        update_status(sid, "summary", 60, "Generating comprehensive AI summary and extracting key insights...")
+        analysis = analyze_content(content_text)
+        title = analysis.get("title", "Document Analysis")
+        summary = analysis.get("summary", "")
+        action_items = analysis.get("action_items", "")
+        decisions = analysis.get("key_decisions", "")
+        questions = analysis.get("open_questions", "")
+        update_status(sid, "extraction_done", 85, "Summary & key insights ready")
 
-        # ── 4. Comprehensive AI Summarization ──────────────────────────────────
-        update_status(sid, "summary", 65, "Generating comprehensive AI summary...")
-        summary = summarize(content_text)
-        update_status(sid, "summary_done", 75, "Summary complete")
-        time.sleep(1.0)  # Rate pacing for Mistral free tier
-
-        # ── 5. Extraction of Action Items, Decisions, & Questions ──────────────
-        update_status(sid, "extraction", 80, "Extracting action items, key findings & open questions...")
-        insights = extract_all_insights(content_text)
-        action_items = insights.get("action_items", "")
-        decisions = insights.get("key_decisions", "")
-        questions = insights.get("open_questions", "")
-        update_status(sid, "extraction_done", 88, "Insights extracted")
-        time.sleep(1.0)  # Rate pacing for Mistral free tier
-
-        # ── 6. RAG Vector Store & Chain Indexing ──────────────────────────────
+        # ── 4. RAG Vector Store & Chain Indexing ──────────────────────────────
         update_status(sid, "rag", 90, "Indexing content in vector database for interactive Q&A...")
         rag_chain = build_rag_chain(content_text, session_id=sid)
         rag_chains[sid] = rag_chain
