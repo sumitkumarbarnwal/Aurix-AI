@@ -204,11 +204,13 @@ def run_pipeline_async(sid, source, language="english"):
         update_status(sid, "title", 50, "Analyzing content and generating title...")
         title = generate_title(content_text)
         update_status(sid, "title_done", 58, f"Title: {title}")
+        time.sleep(1.0)  # Rate pacing for Mistral free tier
 
         # ── 4. Comprehensive AI Summarization ──────────────────────────────────
         update_status(sid, "summary", 65, "Generating comprehensive AI summary...")
         summary = summarize(content_text)
         update_status(sid, "summary_done", 75, "Summary complete")
+        time.sleep(1.0)  # Rate pacing for Mistral free tier
 
         # ── 5. Extraction of Action Items, Decisions, & Questions ──────────────
         update_status(sid, "extraction", 80, "Extracting action items, key findings & open questions...")
@@ -217,6 +219,7 @@ def run_pipeline_async(sid, source, language="english"):
         decisions = insights.get("key_decisions", "")
         questions = insights.get("open_questions", "")
         update_status(sid, "extraction_done", 88, "Insights extracted")
+        time.sleep(1.0)  # Rate pacing for Mistral free tier
 
         # ── 6. RAG Vector Store & Chain Indexing ──────────────────────────────
         update_status(sid, "rag", 90, "Indexing content in vector database for interactive Q&A...")

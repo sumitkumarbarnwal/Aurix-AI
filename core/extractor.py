@@ -25,7 +25,7 @@ def get_llm():
     return _llm
 
 
-def invoke_with_retry(chain, input_data: dict, max_retries: int = 3, base_delay: float = 2.0):
+def invoke_with_retry(chain, input_data: dict, max_retries: int = 4, base_delay: float = 3.0):
     last_err = None
     for attempt in range(max_retries):
         try:
@@ -114,12 +114,17 @@ def extract_all_insights(text: str) -> dict:
         }
 
     except Exception as e:
-        print(f"[Warning] Unified extraction failed: {e}. Using individual extractors.")
-        time.sleep(1.2)
+        print(f"[Warning] Unified extraction hit limit: {e}. Recovering with spaced extractors...")
+        time.sleep(2.5)
+        items = extract_action_items(sample)
+        time.sleep(1.5)
+        decs = extract_key_decisions(sample)
+        time.sleep(1.5)
+        ques = extract_questions(sample)
         return {
-            "action_items": extract_action_items(sample),
-            "key_decisions": extract_key_decisions(sample),
-            "open_questions": extract_questions(sample)
+            "action_items": items,
+            "key_decisions": decs,
+            "open_questions": ques
         }
 
 
